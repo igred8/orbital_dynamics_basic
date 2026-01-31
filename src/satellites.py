@@ -18,13 +18,14 @@ MOON_MASS_KG = 7.346e22
 EARTH_MOON_DIST_M = 384784000
 
 class EarthSystem():
-    def __init__(self, delta_time_s:float=1.0):
+    def __init__(self, j2_correction:bool=True, delta_time_s:float=1.0):
         self.objects = []
         self.positions = None
         self.velocities = None
         self.accels = None
         self.masses = None
 
+        self.j2_correction = j2_correction
         self.delta_time_s = delta_time_s
 
     def add_object(self, gravobj:GravityObject ):
@@ -113,16 +114,20 @@ class EarthSystem():
         r_unit = xyz / distances
         grav_accel_00 = (-GM_factor / distances**2) * r_unit
 
-        J2 = 0.00162
-        x_ = xyz[:,0].reshape([-1,1])
-        y_ = xyz[:,1].reshape([-1,1])
-        z_ = xyz[:,2].reshape([-1,1])
-        grav_accel_20x = -GM_factor*EARTH_RADIUS_M*J2 * (x_ / distances**7) * (5*z_ - distances**2)
-        grav_accel_20y = -GM_factor*EARTH_RADIUS_M*J2 * (y_ / distances**7) * (5*z_ - distances**2)
-        grav_accel_20z = -GM_factor*EARTH_RADIUS_M*J2 * (z_ / distances**7) * (5*z_ - 3*distances**2)
+        if self.j2_correction:
+            J2 = 0.00162
+            x_ = xyz[:,0].reshape([-1,1])
+            y_ = xyz[:,1].reshape([-1,1])
+            z_ = xyz[:,2].reshape([-1,1])
+            grav_accel_20x = -GM_factor*EARTH_RADIUS_M*J2 * (x_ / distances**7) * (5*z_ - distances**2)
+            grav_accel_20y = -GM_factor*EARTH_RADIUS_M*J2 * (y_ / distances**7) * (5*z_ - distances**2)
+            grav_accel_20z = -GM_factor*EARTH_RADIUS_M*J2 * (z_ / distances**7) * (5*z_ - 3*distances**2)
 
-        grav_accel_20 = np.array( [grav_accel_20x, grav_accel_20y, grav_accel_20z] ).reshape([-1,3])
-        return grav_accel_00 + grav_accel_20
+            grav_accel_20 = np.array( [grav_accel_20x, grav_accel_20y, grav_accel_20z] ).reshape([-1,3])
+
+            return grav_accel_00 + grav_accel_20
+        else:
+            return grav_accel_00
         
     def _forward_euler( self, r0,v0,a0 ):
         """Make a step in time using the forward Euler integrator. Should just be used to init snapshots.

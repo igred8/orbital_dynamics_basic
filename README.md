@@ -15,7 +15,9 @@ Roadmap of development:
 3. Bring in `pyvista` visualization suite for particles
 4. Incorporate second order effects:
    - J2 oblateness of Earth
+     - add comparison of orbits
    - Drag for LEO
    - Moon's gravity 
 5. Incorporate thrusts for maneuvers 
 6. Convert between ECEF and LLA coordinates
+ 
