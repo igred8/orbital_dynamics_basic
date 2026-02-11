@@ -18,7 +18,23 @@ MOON_MASS_KG = 7.346e22
 EARTH_MOON_DIST_M = 384784000
 
 class EarthSystem():
+    """Particle simulation container for orbital dynamics of objects in the Earth's gravity. 
+    
+    Attributes
+    ---
+    self.objects — a list that will hold GravityObject instances (satellites, etc.) added via add_object()
+    self.positions, self.velocities, self.accels, self.masses — all None until init_snapshots() is called, at which point they become lists of NumPy arrays tracking state over time
+    """
     def __init__(self, j2_correction:bool=True, delta_time_s:float=1.0):
+        """Constructor for EarthSystem
+
+        Parameters
+        ----------
+        j2_correction : bool, optional
+            Toggles the J2 oblateness correction in gravity calculations (accounts for Earth being slightly flattened at the poles), by default True
+        delta_time_s : float, optional
+            The simulation timestep in seconds, used by the Euler and Verlet integrators, by default 1.0
+        """
         self.objects = []
         self.positions = None
         self.velocities = None
