@@ -3,4 +3,14 @@
 
 *.pyc
 *.pyd
-/__pycache__/*
+__pycache__/
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Environments
+.env
+.venv/
+venv/
+env/
