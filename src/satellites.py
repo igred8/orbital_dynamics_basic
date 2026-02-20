@@ -168,7 +168,7 @@ class EarthSystem():
         self.add_snapshot( r_new, a_new, v_new )
         
 __namespace__ = 'satellites'
-__authoer__ = 'Ivan Gadjev'
+__author__ = 'Ivan Gadjev'
 __year__ = '2026'
 if __name__ == '__main__':
     print(f"This is the {__namespace__}. Written by {__author__}, {__year__}.")
