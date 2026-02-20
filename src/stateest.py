@@ -49,7 +49,7 @@ class KalmanFilter():
 
         return xnew, Pnew
 
-    def measurement_update_step(self, z):
+    def measurement_update_step(self, z, postcovkwargs:dict={}):
         """Updates the state estimate based on a measurement.
 
         x(t) = x(t-1) + K(t) . (z(t) - H(t).x(t-1))
@@ -61,19 +61,53 @@ class KalmanFilter():
         H - transformation matrix that maps state to measurements
         R - covariance of measurement noise
         K - "Kalman filter gain"
+
+        Parameters
+        ----------
+        z : ndarray
+            [n_meas x n_meas_space] measurements vector
+        postcovkwargs : dict
+            pass kwargs to the `calc_posterior_covariance()` method
+        
+        Returns
+        -------
+        xnew, Pnew : ndarray, ndarray
         """
         xcurrent = self.x[-1]
-        Pcurrent = self.P[-1]
+        # Pcurrent = self.P[-1]
         
         K = self.calc_kalman_gain() # updates the Kalman gain
         
         xnew = xcurrent + K @ (z - self.H @ xcurrent)
-        Pnew = Pcurrent - K @ self.H @ Pcurrent
-        
+        Pnew = self.calc_posterior_covariance(**postcovkwargs)
+
         self.x.append(xnew)
         self.P.append(Pnew)
 
         return xnew, Pnew
+
+    def calc_posterior_covariance(self, stable:bool=True):
+        """The posterior covariance in the form:
+        P(t) = ( I - K(t).H(t) ) . P(t)
+        can become unstable over many iterations due to accumulation of floating point math errors. This stems from the subtraction in the parentheses, where K and/or H may have very small values for some elements. This could lead to non-symmetric P, but P is a covariance matrix and must be symmetric.
+
+        Instead use the symmetrized version: P = (P + P^T) / 2
+        see Labbe's chapter on "Kalman Filter Math"
+        
+        P = (I - K.H).P.(I - K.H)^T + K.R.K^T
+
+        """
+        P = self.P[-1]
+        I = np.eye(*P.shape) # eye needs shape tuple unpacked
+        K = self.K[-1]
+        A = I - K @ self.H
+
+        if stable:
+            Pnew = A @ P @ A.T + K @ self.R @ K.T
+        else:
+            Pnew = A @ P
+        
+        return Pnew
 
 
     def calc_kalman_gain(self):
