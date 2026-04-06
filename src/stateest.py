@@ -4,8 +4,19 @@ import scipy.constants as const
 
 
 class KalmanFilter():
+    x: list[np.ndarray]
+    P: list[np.ndarray]
+    F: np.ndarray
+    B: np.ndarray
+    u: list[np.ndarray]
+    Q: np.ndarray
+    z: list[np.ndarray]
+    H: np.ndarray
+    R: np.ndarray
+    K: list[np.ndarray]
 
     def __init__(self, x0, P0, F, B, u, Q, H, R):
+        
         self.x = [x0]
         self.P = [P0]
         
@@ -23,11 +34,33 @@ class KalmanFilter():
     def update_xPuK(self, xnew, Pnew, unew, Knew):
         """Append the new matricies for x, P, u, K.
         """
+        xnew = self._shape_x(xnew)
         self.x.append(xnew)
         self.P.append(Pnew)
+        unew = self._shape_u(unew)
         self.u.append(unew)
         self.K.append(Knew)
 
+    def _shape_x(self, x):
+        x = np.reshape(x, [-1,1])
+        # dimensions check
+        if (self.P) and ((self.P[-1].shape[0] != x.shape[0]) or (self.P[-1].shape[1] != x.shape[0])):
+            raise ValueError(f"Dimenesions of state space are inconsistent. x must be [N x 1] and P must be [N x N]. ")
+        elif (self.x) and (self.x[-1].shape != x.shape):
+            raise ValueError(f"Dimensions of the state vector are inconsistent. x must have shape = {self.x[-1].shape}.")
+        
+        return x
+    
+    def _shape_u(self, u):
+        if u is not None:
+            u = np.reshape(u, [-1,1])
+            if (self.B.shape[0] != u.shape[0]) or (self.B.shape[1] != u.shape[0]):
+                raise ValueError(f"Dimensions of the controls u and B are inconsistent. B must be [M x M] and u must be [M x 1].")
+            elif (self.u) and (self.u[-1].shape != u.shape):
+                raise ValueError(f"Dimensions of the controls u are inconsistent. u must have shape = {self.u[-1].shape}.")
+        
+        return u    
+        
     def model_predition_step(self, u=None):
         """Given a state vector and how it transitions in a single time-step based on a model, that may include the controls, predict the next state.
 
@@ -53,16 +86,16 @@ class KalmanFilter():
             _description_
         """
         xcurrent = self.x[-1]
-        self.u.append(u)
+        # self.u.append(u)
         if u is not None:
             xnew = self.F @ xcurrent + self.B @ u
         else:
             xnew = self.F @ xcurrent
-        self.x.append(xnew)
+        # self.x.append(xnew)
 
         Pcurrent = self.P[-1]
         Pnew = self.F @ Pcurrent @ self.F.T + self.Q
-        self.P.append(Pnew)
+        # self.P.append(Pnew)
 
         return xnew, Pnew, u
 
