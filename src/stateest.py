@@ -3,6 +3,67 @@ import numpy.linalg as LA
 import scipy.constants as const
 
 
+def gen_newtonian_motion_update_matrix(time_step:float, 
+state_vec_order:int=2, approx_order:int=None ):
+    """Generates the 'fundamental matrix' that transitions the state vector to the next time-step.
+    
+    x_vec(t + dt) = F . x_vec(t)
+
+    F = I + A dt + A^2 dt^2 / 2! + ... A^n dt^n / n!
+    where A is the matrix that defines the differential equation: x' = A . x.
+    The state vector is x_vec = [x, x', x'', ... x^(k)] = [x_0, x_1, ... x_k], where x^(k) is the kth time derivative of the position x. 
+    d(x_k)/dt = 0
+    d(x_i)/dt = x_(i+1)
+
+    This results in a simple form of A. Its elements are 1 for the first above diagonal and zeros otherwise. 
+    Example: constant acceleration
+    A = [ 0 1 0
+          0 0 1
+          0 0 0 ]
+    F then becomes: F = I + A dt + A^2 dt^2 / 2! with higher order terms vanishing.
+    F = [ 0 1 0.5
+          0 0 1
+          0 0 0 ]
+    
+    Parameters
+    ----------
+    time_step : float
+        The time step, dt, over which the state vector is updated.
+    state_vec_order : int, optional
+        The order of the state vector, which is the order of the position derivative that is zero, by default 2, which corresponds to constant acceleration, x'' = 0.
+    approx_order : int, optional
+        A^n vanishes for n>state_vec_order, but the user may want to approx with fewer terms in the expansion of F, by default None which keeps all non-vanishing powers of A.
+
+    Returns
+    -------
+    np.ndarray
+        Return the F matrix that transitions the state vector to the next time step.
+    """
+    ndim_state = state_vec_order + 1
+    # make the A matrix
+    A = np.zeros([ndim_state, ndim_state])
+    idx = np.arange(state_vec_order)
+    A[idx, idx+1] = 1
+
+    if approx_order is None:
+        approx_order = state_vec_order
+    largest_nonzero_power = min(state_vec_order, approx_order)
+    F = np.zeros_like(A)
+    AA = np.eye(ndim_state)
+    factorial = 1
+    for i in range(1,largest_nonzero_power+1):
+        # print("---")
+        # print(i)
+        AA = AA @ A
+        # print(AA)
+        factorial *= i
+        # print(factorial)
+        F += AA * time_step**i / factorial
+
+    return F
+
+
+
 class KalmanFilter():
     x: list[np.ndarray]
     P: list[np.ndarray]
@@ -73,7 +134,7 @@ class KalmanFilter():
         u - state of the controls
 
         P - convariance matrix of the state
-        Q - convariance matrix of noisy controls
+        Q - convariance matrix of system noise (e.g. windy weather randomly changes position and velocity)
 
         Parameters
         ----------
@@ -83,20 +144,18 @@ class KalmanFilter():
         Returns
         -------
         xnew, Pnew, u : ndarray, ndarray, ndarray
-            _description_
+            New predicted state, covariance, and control (passed from input)
         """
         xcurrent = self.x[-1]
-        # self.u.append(u)
+        
         if u is not None:
             xnew = self.F @ xcurrent + self.B @ u
         else:
             xnew = self.F @ xcurrent
-        # self.x.append(xnew)
-
+        
         Pcurrent = self.P[-1]
         Pnew = self.F @ Pcurrent @ self.F.T + self.Q
-        # self.P.append(Pnew)
-
+        
         return xnew, Pnew, u
 
     def measurement_update_step(self, z=None, postcovkwargs:dict={}):
@@ -133,9 +192,6 @@ class KalmanFilter():
         
         xnew = xcurrent + K @ (z - self.H @ xcurrent)
         Pnew = self.calc_posterior_covariance(Pcurrent, K, **postcovkwargs)
-
-        # self.x.append(xnew)
-        # self.P.append(Pnew)
 
         return xnew, Pnew, K
 
