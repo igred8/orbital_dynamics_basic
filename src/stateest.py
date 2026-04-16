@@ -77,7 +77,32 @@ class KalmanFilter():
     K: list[np.ndarray]
 
     def __init__(self, x0, P0, F, B, u, Q, H, R):
+        """
+        System model prediction step
+        x(t) = F(t).x(t-1) + B(t).u(t)
+        P(t) = F(t).P(t-1).F(t)^T + Q(t)
+
+        x - state vector
+        F - transition matrix based on model
+        B - control matrix that applies the controls state u(t) to the state
+        u - state of the controls
+
+        P - convariance matrix of the state
+        Q - convariance matrix of system noise (e.g. windy weather randomly changes position and velocity)
+
+        measurement update step
+        x(t) = x(t-1) + K(t) . (z(t) - H(t).x(t-1))
+        P(t) = P(t) - K(t).H(t).P(t)
+
+        K = P(t).H(t)^T . (H(t).P(t).H(t)^T + R(t))^-1
+
+        z - measurement vector
+        H - transformation matrix that maps state to measurements
+        R - covariance of measurement noise
+        K - "Kalman filter gain"
+
         
+        """
         self.x = [x0]
         self.P = [P0]
         
@@ -91,7 +116,53 @@ class KalmanFilter():
         self.H = H
         self.R = R
         self.K = []
+    def get_states(self, which='all'):
+        """Return a np.ndarray of the state estimates. 
+        note: self.x is a list of np.ndarrays, but method's output converts it to np.ndarray.
 
+        Parameters
+        ----------
+        which : str, optional
+            "all": return all x states including intervediates
+            "estimates": return only x after each epoch (prediction+measurement updates)
+            By default 'all'
+
+        Returns
+        -------
+        np.ndarray
+        """
+        n_features = self.x[0].shape[0]
+        if which == "all":
+            outarr = np.squeeze(self.x)
+        elif which == "estimates":
+            outarr = np.squeeze(self.x[2::2])
+        else:
+            raise ValueError("`which` must be one of {'all', 'estimates'}")
+        return outarr
+    
+    def get_covariances(self, which='all'):
+        """Return a np.ndarray of the covariances of state estimates. 
+        note: self.P is a list of np.ndarrays, but method's output converts it to np.ndarray.
+
+        Parameters
+        ----------
+        which : str, optional
+            "all": return all x states including intervediates
+            "estimates": return only x after each epoch (prediction+measurement updates)
+            By default 'all'
+
+        Returns
+        -------
+        np.ndarray
+        """
+        if which == 'all':
+            outarr = np.array(self.P)
+        elif which == 'estimates':
+            outarr = np.array(self.P[2::2])
+        else:
+            raise ValueError("`which` must be one of {'all', 'estimates'}")
+        return outarr
+    
     def update_xPuK(self, xnew, Pnew, unew, Knew):
         """Append the new matricies for x, P, u, K.
         """
