@@ -48,7 +48,7 @@ state_vec_order:int=2, approx_order:int=None ):
     if approx_order is None:
         approx_order = state_vec_order
     largest_nonzero_power = min(state_vec_order, approx_order)
-    F = np.zeros_like(A)
+    F = np.eye(ndim_state)
     AA = np.eye(ndim_state)
     factorial = 1
     for i in range(1,largest_nonzero_power+1):

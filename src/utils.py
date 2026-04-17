@@ -1,22 +1,5 @@
 import numpy as np
 
-def covariance_ellipse_vectors(cov_mat):
-    evals, evecs = np.linalg.eigh(cov_mat) # returns evals and evecs in ascending order
-    ibig = -1
-    ismall = 0
-    vmajor = np.reshape(np.sqrt(evals[ibig]) * evecs[:, ibig], [-1,1])
-    vminor = np.reshape(np.sqrt(evals[ismall]) * evecs[:, ismall], [-1,1])
-    return vmajor, vminor
-
-def generate_ellipse_xy( xy_center, vmajor, vminor, enclosed_fraction=0.95, npts=50):
-    xy_center = xy_center.reshape(vmajor.shape)
-    thvec = np.linspace(0, 2*np.pi, npts)
-    # scale_factor = np.sqrt(-2 * np.log(1 - enclosed_fraction))
-    scale_factor = 1
-    xypts = np.cos(thvec) * scale_factor*vmajor + np.sin(thvec) * scale_factor*vminor + xy_center
-    
-    return xypts
-
 def generate_covariance_ellipse(mu, cov, enclosed_frac=0.95, npts=100):
     """Create the representative ellipse outline of the covariance matrix centered at the mean.
 
