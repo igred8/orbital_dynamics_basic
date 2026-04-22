@@ -13,6 +13,7 @@ Orbital dynamics literature references:
 The implementation of a Kalman Filter (KF) is done according to standard literature. For references see:
 1. Labbe, "Kalman and Bayesian Filters in Python", 2020
 2. Murphy, "Machine Learning: A Probabilistic Perspective", 2012
+3. Welch Bishop, "Kalman Intro", 2006
 
 
 ## Structure 

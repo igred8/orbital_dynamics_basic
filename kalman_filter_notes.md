@@ -21,3 +21,22 @@ In Murphy this is essentially rewritten with $C = HF$ and $D = HB$.
 ### notation note
 Notice that in Murphy, the state estimate *is* the mean of the posterior Gaussian, $\mu_{t|t-1}$, while Labbe calls it $x_k$ for the kth value of t. Which is a bit clunky because then the covariance matrix, which is $\Sigma_{t|t-1}$ in Murphy, is called $P_k$. I think the Murphy notation is clearer because it makes explicit that our estimate is just the mean of the Bayesian updated Gaussian and our uncertainty is the covariance matrix of that Gaussian. 
 
+## Newtonian Dynamics Models
+
+### SHO
+
+$$ -kx = ma $$
+$$ \frac{d^2x}{dt^2} = -\omega^2 x $$
+The general solution is the complex exponential:
+$$ x(t) = Ae^{i\omega t} + Be^{-i\omega t} $$
+The initial conditions will define the constants.
+The position initial condition:
+$$ x(t=0) = x_0 $$
+$$ A + B = x_0 $$ 
+The velocity initial condition:
+$$ x'(t=0) = v_0 $$
+$$ A - B = -iv_0/\omega $$
+From these linear algebraic equations we solve for A and B:
+$$ A = \frac{1}{2}x_0 - \frac{iv_0}{2\omega} $$
+$$ B = \frac{1}{2}x_0 + \frac{iv_0}{2\omega} $$
+
