@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.linalg as LA
-import scipy.constants as const
+# import numpy.linalg as LA
+# import scipy.constants as const
 
 
 def gen_newtonian_motion_update_matrix(time_step:float, 
@@ -131,7 +131,6 @@ class KalmanFilter():
         -------
         np.ndarray
         """
-        n_features = self.x[0].shape[0]
         if which == "all":
             outarr = np.squeeze(self.x)
         elif which == "estimates":
@@ -177,7 +176,7 @@ class KalmanFilter():
         x = np.reshape(x, [-1,1])
         # dimensions check
         if (self.P) and ((self.P[-1].shape[0] != x.shape[0]) or (self.P[-1].shape[1] != x.shape[0])):
-            raise ValueError(f"Dimenesions of state space are inconsistent. x must be [N x 1] and P must be [N x N]. ")
+            raise ValueError("Dimenesions of state space are inconsistent. x must be [N x 1] and P must be [N x N]. ")
         elif (self.x) and (self.x[-1].shape != x.shape):
             raise ValueError(f"Dimensions of the state vector are inconsistent. x must have shape = {self.x[-1].shape}.")
         
@@ -187,7 +186,7 @@ class KalmanFilter():
         if u is not None:
             u = np.reshape(u, [-1,1])
             if (self.B.shape[0] != u.shape[0]) or (self.B.shape[1] != u.shape[0]):
-                raise ValueError(f"Dimensions of the controls u and B are inconsistent. B must be [M x M] and u must be [M x 1].")
+                raise ValueError("Dimensions of the controls u and B are inconsistent. B must be [M x M] and u must be [M x 1].")
             elif (self.u) and (self.u[-1].shape != u.shape):
                 raise ValueError(f"Dimensions of the controls u are inconsistent. u must have shape = {self.u[-1].shape}.")
         
@@ -278,9 +277,9 @@ class KalmanFilter():
 
         """
         # P = self.P[-1]
-        I = np.eye(*P.shape) # eye needs shape tuple unpacked
+        Imat = np.eye(*P.shape) # eye needs shape tuple unpacked
         # K = self.K[-1]
-        A = I - K @ self.H
+        A = Imat - K @ self.H
 
         if stable:
             Pnew = A @ P @ A.T + K @ self.R @ K.T
