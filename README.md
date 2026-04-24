@@ -28,8 +28,9 @@ The state estimation methods are in `src/stateest.py`.
     - `fixed` (the state transition matrix for newtonian motion had a bug) estimates are worse for shorter time steps. systematically short of true position and measurements
     - `fixed` (get_covarriances was not striding over intermediate steps) covariances oscillate in amplitude?
     - `fixed` (it was a bug)these seem like bugs in the code, but could they be due to KF itself for given params?
-  - Constant acceleration in 1D position
-  - Constant velocity in 2D position
+  - `done` Constant velocity in 2D position
+  - `done` Constant velocity in 2D polar coordinates
+  - `done` Constant acceleration in 2D position
   - 
 - Use orbit simulation data as input to KF and make a state estimation flow
 - 
