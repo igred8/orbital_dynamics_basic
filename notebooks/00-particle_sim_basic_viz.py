@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pyvista as pv
 
 import sys
-sys.path.append('E:/google-drive/py_projects/satellites/src')
+sys.path.append('./src')
 import satellites as sat
 
 
