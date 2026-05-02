@@ -20,6 +20,39 @@ The implementation of a Kalman Filter (KF) is done according to standard literat
 The particle simulation functionality is in `src/satellites.py` where the particle simulation object and methods are defined. Working examples are presented inside `/notebooks`
 The state estimation methods are in `src/stateest.py`. 
 
+## Description of the numerical simulation
+
+The simulation of orbital trajectories is based on a step-by-step integration of the particle-like object's acceleration. The Earth's gravitational potential gives the object's acceleration at a given point in space. From the acceleration, the velocity and then the position are calculated by a "Velocty Verlet" intergration step. The Verlet integrator provides 
+- numerical stability for the particle trajectories 
+- time reversibility
+- preservation of the system's phase-space volume 
+
+The **velocity Verlet** recursion equations for Newton's equations are:
+
+1. Compute the new position, $r_{k+1}$ from the previous state $x_k = (r,v,a)_k$
+$$r_{k+1} = r_k + \Delta t v_k + \frac{a_k^2}{2}\Delta t$$
+
+2. Compute the new acceleration based from the potential based on the new position
+$$a_{k+1} = A(r_{k+1})$$
+
+3. Compute the new veloctiy from the mean of the new and old accelerations
+$$v_{k+1} = v_k + \frac{(a_k + a_{k+1})}{2}\Delta t$$
+
+In general, the time-step, $\Delta t$ can also depend on the iteration number i.e. $\Delta t_k$. Also note that the acceleration update assumes that the acceleration at a time-step $k$ only depends on the position of the particle at that time-step. 
+
+
+Note that since the velocity Verlet requires knowledge of the kinematic state in the previous two steps, an initialization procedure is needed. Fortunately, it is sufficient to use a basic forward Euler integration scheme to generate the first two states. 
+
+**Forward Euler**:
+$$a_{k+1} = a_{k} = a_{0}$$
+$$v_{k+1} = v_{k} + a_{0}\Delta t$$
+$$r_{k+1} = r_{l} + v_{k}\Delta t + \frac{a_{0}}{2}\Delta t^{2} $$
+
+### J2 correction
+The J2 correction is a second order term in the spherical harmonics expansion of Earth's gravitational potential. It accounts for the slight, axially symmetric flattening at poles due to Earth's rotation. The estimated amplitude of the J2 term is $J_2 = 0.00162$, which is about a thousand times smaller than the perfect sphere potential term. 
+
+
+
 
 ## Development to-do's:
 2026.04

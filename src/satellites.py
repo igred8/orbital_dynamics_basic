@@ -31,7 +31,8 @@ class EarthSystem():
         Parameters
         ----------
         j2_correction : bool, optional
-            Toggles the J2 oblateness correction in gravity calculations (accounts for Earth being slightly flattened at the poles), by default True
+            Toggles the J2 oblateness correction in gravity calculations 
+            (accounts for Earth being slightly flattened at the poles), by default True
         delta_time_s : float, optional
             The simulation timestep in seconds, used by the Euler and Verlet integrators, by default 1.0
         """
@@ -159,6 +160,14 @@ class EarthSystem():
     def propagate_step( self ):
         """Calculate the position, velocity, and acceleration of the objects for the next time-step, using the velocity Verlet integration.
         Append the arrays by calling `add_snapshot`
+
+        compute the new position from the previous state x = (r,v,a)
+        r_{k+1} = r_k + dt*v_k + 0.5*dt*a_k^2
+        compute the new acceleration based from the potential based on the new position
+        a_{k+1} = A(r_{k+1})
+        compute the new veloctiy from the mean of the new and old accelerations
+        v_{k+1} = v_k + 0.5*dt*(a_k + a_{k+1})
+        
         """
         # Velocity Verlet step
         r_new = self.positions[-1] + self.velocities[-1]*self.delta_time_s + 0.5*self.accels[-1]*self.delta_time_s**2
