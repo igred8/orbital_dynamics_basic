@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 import numpy.linalg as LA
 import scipy.constants as const
 
@@ -23,8 +24,18 @@ class EarthSystem():
     Attributes
     ---
     self.objects — a list that will hold GravityObject instances (satellites, etc.) added via add_object()
-    self.positions, self.velocities, self.accels, self.masses — all None until init_snapshots() is called, at which point they become lists of NumPy arrays tracking state over time
+    self.positions, self.velocities, self.accels, self.masses — all None until init_snapshots() is called, 
+        at which point they become lists of NumPy arrays tracking state over time
     """
+    objects: list = []
+    positions : list[NDArray] = None
+    velocities : list[NDArray] = None
+    accels : list[NDArray] = None
+    masses : list[NDArray] = None
+
+    j2_correction : bool = True
+    delta_time_s : float = 1.0
+
     def __init__(self, j2_correction:bool=True, delta_time_s:float=1.0):
         """Constructor for EarthSystem
 
@@ -36,11 +47,6 @@ class EarthSystem():
         delta_time_s : float, optional
             The simulation timestep in seconds, used by the Euler and Verlet integrators, by default 1.0
         """
-        self.objects = []
-        self.positions = None
-        self.velocities = None
-        self.accels = None
-        self.masses = None
 
         self.j2_correction = j2_correction
         self.delta_time_s = delta_time_s
@@ -89,7 +95,7 @@ class EarthSystem():
             self.add_snapshot( ri, vi, ai )
         return 0
     
-    def add_snapshot( self, pos_new, vel_new, accel_new ):
+    def add_snapshot(self, pos_new: NDArray, vel_new: NDArray, accel_new: NDArray):
         """Append the given arrays as new elements in the lists.
 
         Parameters
@@ -112,7 +118,7 @@ class EarthSystem():
         self.velocities.append( vel_new )
         self.accels.append( accel_new )
 
-    def calc_gravity_accel(self, xyz ):
+    def calc_gravity_accel(self, xyz: NDArray):
         """With Earth as the center of the gravitational well, calculate the acceleration at the given points.
         
         No corrections due to oblateness of Earth.
@@ -146,7 +152,7 @@ class EarthSystem():
         else:
             return grav_accel_00
         
-    def _forward_euler( self, r0,v0,a0 ):
+    def _forward_euler(self, r0:float, v0:float, a0:float) -> tuple[float, float, float]:
         """Make a step in time using the forward Euler integrator. Should just be used to init snapshots.
         
         """

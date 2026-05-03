@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import multivariate_normal
 
-def generate_covariance_ellipse(mu, cov, enclosed_frac=0.95, npts=100):
+def generate_covariance_ellipse(mu:NDArray, cov:NDArray, enclosed_frac:float=0.95, npts:int=100) -> NDArray:
     """Create the representative ellipse outline of the covariance matrix centered at the mean.
 
     Parameters
@@ -40,7 +40,7 @@ def generate_covariance_ellipse(mu, cov, enclosed_frac=0.95, npts=100):
     )
     return xy
 
-def get_position_covariances(cov:NDArray, state_order=1):
+def get_position_covariances(cov:NDArray, state_order:int=1) -> NDArray:
     """Extract the covariance matrix of the position coordinates for a state.
     Assumptions:
     If the state is of order n, then it is in this order [x, vx, ax, ... x_n, y, vy, ay, ...y_n]
@@ -74,7 +74,7 @@ def get_position_covariances(cov:NDArray, state_order=1):
     # print(mask)
     return cov[mask].reshape([nr, nc])
 
-def polar_to_cartesian(rvec:NDArray, thvec:NDArray, th_degrees:bool=False):
+def polar_to_cartesian(rvec:NDArray, thvec:NDArray, th_degrees:bool=False) -> tuple[NDArray, NDArray]:
     """Transform from r-theta to x-y coordinates. 
 
     Parameters
@@ -98,7 +98,7 @@ def polar_to_cartesian(rvec:NDArray, thvec:NDArray, th_degrees:bool=False):
     yvec = rvec * np.sin(thvec)
     return xvec, yvec
 
-def transform_polar_Gaussian_to_Cartesian(r_phi_mean:NDArray, r_phi_covariances:NDArray, _n_samples:int=10000):
+def transform_polar_Gaussian_to_Cartesian(r_phi_mean:NDArray, r_phi_covariances:NDArray, _n_samples:int=10000) -> tuple[NDArray, NDArray]:
     """Calculate a mean and covariance for a Gaussian in Cartesian coordinates, 
     based on samples from a Gaussian in polar coordinates.
     In general, a Gaussian distribution in polar coordinates G(r,th; mu, sig) does not transform to a Gaussian in Cartesian.
