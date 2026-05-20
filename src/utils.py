@@ -4,6 +4,20 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import multivariate_normal
 
+def rng_initiator(rng=None):
+    if rng is None:
+        return np.random.default_rng()
+
+    elif isinstance(rng, int):
+        return np.random.default_rng(seed=rng)
+
+    elif isinstance(rng, np.random.Generator):
+        return rng
+
+    else:
+        raise ValueError('rng must be None, int, or np.random.default_rng')
+
+
 def generate_covariance_ellipse(mu:NDArray, cov:NDArray, enclosed_frac:float=0.95, npts:int=100) -> NDArray:
     """Create the representative ellipse outline of the covariance matrix centered at the mean.
 
@@ -133,3 +147,41 @@ def transform_polar_Gaussian_to_Cartesian(r_phi_mean:NDArray, r_phi_covariances:
     xy_mean = np.mean(xy_samples, axis=0)
     xy_covariances = np.cov(xy_samples.T)
     return xy_mean, xy_covariances
+
+
+def finite_difference(data:NDArray, dt:float, method='backward'):
+    """Calculates a finite difference derivative of the given data on axis=0.
+
+    The output will not have the same number of time steps as the input,
+     since multiple points in time from data are needed to estimate its derivative.
+     The user can append their estimate for the boundaries (start and end of time-series) as needed.
+
+    Parameters
+    ----------
+    data : NDArray
+        shape (n_functions, n_timesteps)
+    dt : float
+        time step for differentiation
+    method : str, optional
+        Finite difference method. 'central' needs a step in the future and a step in the past, but gives O(dt^2) error scaling.
+        By default 'backward'
+
+    Returns
+    -------
+    NDArray
+        
+    """
+    data = np.atleast_2d(data)
+    if method == "backward":
+        data_deriv = (data[:,1:] - data[:,:-1]) / dt
+    elif method == "central":
+        data_deriv = ( data[:,2:] - data[:,:-2] ) / (2*dt)
+
+    return data_deriv
+
+
+__namespace__ = 'utils'
+__author__ = 'Ivan Gadjev'
+__year__ = '2026'
+if __name__ == '__main__':
+    print(f"This is the {__namespace__}. Written by {__author__}, {__year__}.")

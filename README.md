@@ -51,7 +51,11 @@ $$r_{k+1} = r_{l} + v_{k}\Delta t + \frac{a_{0}}{2}\Delta t^{2} $$
 ### J2 correction
 The J2 correction is a second order term in the spherical harmonics expansion of Earth's gravitational potential. It accounts for the slight, axially symmetric flattening at poles due to Earth's rotation. The estimated amplitude of the J2 term is $J_2 = 0.00162$, which is about a thousand times smaller than the perfect sphere potential term. 
 
+## State estimation
 
+### Kalman Filter
+
+### Measurement Simulation
 
 
 ## Development to-do's:
