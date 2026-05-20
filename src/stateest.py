@@ -1,10 +1,8 @@
 import numpy as np
-# import numpy.linalg as LA
-# import scipy.constants as const
-
+from numpy.typing import NDArray
 
 def gen_newtonian_motion_update_matrix(time_step:float, 
-state_vec_order:int=2, approx_order:int=None ):
+    state_vec_order:int=2, approx_order:int=None ) -> NDArray:
     """Generates the 'fundamental matrix' that transitions the state vector to the next time-step.
     
     x_vec(t + dt) = F . x_vec(t)
@@ -36,7 +34,7 @@ state_vec_order:int=2, approx_order:int=None ):
 
     Returns
     -------
-    np.ndarray
+    NDArray
         Return the F matrix that transitions the state vector to the next time step.
     """
     ndim_state = state_vec_order + 1
@@ -65,18 +63,21 @@ state_vec_order:int=2, approx_order:int=None ):
 
 
 class KalmanFilter():
-    x: list[np.ndarray]
-    P: list[np.ndarray]
-    F: np.ndarray
-    B: np.ndarray
-    u: list[np.ndarray]
-    Q: np.ndarray
-    z: list[np.ndarray]
-    H: np.ndarray
-    R: np.ndarray
-    K: list[np.ndarray]
+    x: list[NDArray]
+    P: list[NDArray]
+    F: NDArray
+    B: NDArray
+    u: list[NDArray]
+    Q: NDArray
+    z: list[NDArray]
+    H: NDArray
+    R: NDArray
+    K: list[NDArray]
 
-    def __init__(self, x0, P0, F, B, u, Q, H, R):
+    def __init__(self, 
+        x0:NDArray, P0:NDArray, F:NDArray, 
+        B:NDArray, u:NDArray, 
+        Q:NDArray, H:NDArray, R:NDArray):
         """
         System model prediction step
         x(t) = F(t).x(t-1) + B(t).u(t)
@@ -116,9 +117,10 @@ class KalmanFilter():
         self.H = H
         self.R = R
         self.K = []
-    def get_states(self, which='all'):
-        """Return a np.ndarray of the state estimates. 
-        note: self.x is a list of np.ndarrays, but method's output converts it to np.ndarray.
+
+    def get_states(self, which:str='all') -> NDArray:
+        """Return a NDArray of the state estimates. 
+        note: self.x is a list of NDArrays, but method's output converts it to NDArray.
 
         Parameters
         ----------
@@ -129,7 +131,7 @@ class KalmanFilter():
 
         Returns
         -------
-        np.ndarray
+        NDArray
         """
         if which == "all":
             outarr = np.squeeze(self.x)
@@ -139,9 +141,9 @@ class KalmanFilter():
             raise ValueError("`which` must be one of {'all', 'estimates'}")
         return outarr
     
-    def get_covariances(self, which='all'):
-        """Return a np.ndarray of the covariances of state estimates. 
-        note: self.P is a list of np.ndarrays, but method's output converts it to np.ndarray.
+    def get_covariances(self, which:str='all') -> NDArray:
+        """Return a NDArray of the covariances of state estimates. 
+        note: self.P is a list of NDArrays, but method's output converts it to NDArray.
 
         Parameters
         ----------
@@ -152,7 +154,7 @@ class KalmanFilter():
 
         Returns
         -------
-        np.ndarray
+        NDArray
         """
         if which == 'all':
             outarr = np.array(self.P)
@@ -162,7 +164,7 @@ class KalmanFilter():
             raise ValueError("`which` must be one of {'all', 'estimates'}")
         return outarr
     
-    def update_xPuK(self, xnew, Pnew, unew, Knew):
+    def update_xPuK(self, xnew:NDArray, Pnew:NDArray, unew:NDArray, Knew:NDArray) -> None:
         """Append the new matricies for x, P, u, K.
         """
         xnew = self._shape_x(xnew)
@@ -172,7 +174,24 @@ class KalmanFilter():
         self.u.append(unew)
         self.K.append(Knew)
 
-    def _shape_x(self, x):
+    def _shape_x(self, x:NDArray) -> NDArray:
+        """Makes checks on the dimensions of x and attempts a reshape.
+
+        Parameters
+        ----------
+        x : NDArray
+
+        Returns
+        -------
+        NDArray
+
+        Raises
+        ------
+        ValueError
+            Dimenesions of state space are inconsistent
+        ValueError
+            Dimensions of the state vector are inconsistent
+        """
         x = np.reshape(x, [-1,1])
         # dimensions check
         if (self.P) and ((self.P[-1].shape[0] != x.shape[0]) or (self.P[-1].shape[1] != x.shape[0])):
@@ -182,7 +201,24 @@ class KalmanFilter():
         
         return x
     
-    def _shape_u(self, u):
+    def _shape_u(self, u:NDArray) -> NDArray:
+        """Checks dimensions of control vector.
+
+        Parameters
+        ----------
+        u : NDArray
+
+        Returns
+        -------
+        NDArray
+
+        Raises
+        ------
+        ValueError
+            Dimensions of the controls u and B are inconsistent.
+        ValueError
+            Dimensions of the controls u are inconsistent.
+        """
         if u is not None:
             u = np.reshape(u, [-1,1])
             if (self.B.shape[0] != u.shape[0]) or (self.B.shape[1] != u.shape[0]):
@@ -192,7 +228,7 @@ class KalmanFilter():
         
         return u    
         
-    def model_predition_step(self, u=None):
+    def model_predition_step(self, u:NDArray=None) -> tuple[NDArray, NDArray, NDArray]:
         """Given a state vector and how it transitions in a single time-step based on a model, that may include the controls, predict the next state.
 
         x(t) = F(t).x(t-1) + B(t).u(t)
@@ -208,12 +244,12 @@ class KalmanFilter():
 
         Parameters
         ----------
-        u : ndarray, optional
+        u : NDArray, optional
             [n_controls x 1] state of the controls, by default None
 
         Returns
         -------
-        xnew, Pnew, u : ndarray, ndarray, ndarray
+        xnew, Pnew, u : NDArray, NDArray, NDArray
             New predicted state, covariance, and control (passed from input)
         """
         xcurrent = self.x[-1]
@@ -228,7 +264,7 @@ class KalmanFilter():
         
         return xnew, Pnew, u
 
-    def measurement_update_step(self, z=None, postcovkwargs:dict={}):
+    def measurement_update_step(self, z:NDArray=None, postcovkwargs:dict={}) -> tuple[NDArray, NDArray, NDArray]:
         """Updates the state estimate based on a measurement.
 
         x(t) = x(t-1) + K(t) . (z(t) - H(t).x(t-1))
@@ -243,14 +279,14 @@ class KalmanFilter():
 
         Parameters
         ----------
-        z : ndarray
+        z : NDArray
             [n_meas x n_meas_space] measurements vector
         postcovkwargs : dict
             pass kwargs to the `calc_posterior_covariance()` method
         
         Returns
         -------
-        xnew, Pnew : ndarray, ndarray
+        xnew, Pnew : NDArray, NDArray
         """
         xcurrent = self.x[-1]
         Pcurrent = self.P[-1]
@@ -265,7 +301,7 @@ class KalmanFilter():
 
         return xnew, Pnew, K
 
-    def calc_posterior_covariance(self, P, K, stable:bool=True):
+    def calc_posterior_covariance(self, P:NDArray, K:NDArray, stable:bool=True) -> NDArray:
         """The posterior covariance in the form:
         P(t) = ( I - K(t).H(t) ) . P(t)
         can become unstable over many iterations due to accumulation of floating point math errors. This stems from the subtraction in the parentheses, where K and/or H may have very small values for some elements. This could lead to non-symmetric P, but P is a covariance matrix and must be symmetric.
@@ -289,7 +325,7 @@ class KalmanFilter():
         return Pnew
 
 
-    def calc_kalman_gain(self, P):
+    def calc_kalman_gain(self, P:NDArray) -> NDArray:
         """Calculate the Kalman gain, K, which specifies the optimal ratio of process vs. measurement estimate.
 
             K = P(t).H(t)^T . (H(t).P(t).H(t)^T + R(t))^-1
@@ -301,7 +337,7 @@ class KalmanFilter():
         
         return K
 
-    def perform_epoch(self, u=None, z=None, postcovkwargs=None):
+    def perform_epoch(self, u:NDArray=None, z=None, postcovkwargs=None) -> None:
         """_summary_
 
         Parameters

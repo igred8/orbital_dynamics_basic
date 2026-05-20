@@ -1,8 +1,10 @@
 import numpy as np
+from numpy.typing import NDArray
 import numpy.linalg as LA
 import scipy.constants as const
 
 class GravityObject():
+    __slots__ = ['position', 'velocity', 'mass']
     def __init__(self, xyz_m:list=[0,0,0], vxyz_mps:list=[0,0,0], mass_kg:float=1 ):
         self.position = np.array( xyz_m ).reshape([1,3])
         self.velocity = np.array( vxyz_mps ).reshape([1,3])
@@ -17,35 +19,44 @@ EARTH_RADIUS_M = 6378137.0
 MOON_MASS_KG = 7.346e22
 EARTH_MOON_DIST_M = 384784000
 
-class EarthSystem():
+class EarthSystem:
     """Particle simulation container for orbital dynamics of objects in the Earth's gravity. 
     
     Attributes
     ---
     self.objects — a list that will hold GravityObject instances (satellites, etc.) added via add_object()
-    self.positions, self.velocities, self.accels, self.masses — all None until init_snapshots() is called, at which point they become lists of NumPy arrays tracking state over time
+    self.positions, self.velocities, self.accels, self.masses — all None until init_snapshots() is called, 
+        at which point they become lists of NumPy arrays tracking state over time
     """
+    objects: list
+    positions : list[NDArray]
+    velocities : list[NDArray]
+    accels : list[NDArray]
+    masses : list[NDArray]
+
+    j2_correction : bool
+    delta_time_s : float
+
     def __init__(self, j2_correction:bool=True, delta_time_s:float=1.0):
         """Constructor for EarthSystem
 
         Parameters
         ----------
         j2_correction : bool, optional
-            Toggles the J2 oblateness correction in gravity calculations (accounts for Earth being slightly flattened at the poles), by default True
+            Toggles the J2 oblateness correction in gravity calculations 
+            (accounts for Earth being slightly flattened at the poles), by default True
         delta_time_s : float, optional
             The simulation timestep in seconds, used by the Euler and Verlet integrators, by default 1.0
         """
         self.objects = []
-        self.positions = None
-        self.velocities = None
-        self.accels = None
-        self.masses = None
-
         self.j2_correction = j2_correction
         self.delta_time_s = delta_time_s
 
     def add_object(self, gravobj:GravityObject ):
-        self.objects.append(gravobj)
+        if self.objects is None:
+            self.objects = [gravobj]
+        else:
+            self.objects.append(gravobj)
     
     def init_snapshots(self, n_time_steps:int=2):
         """Calculate the state of the system in the first two time steps. 
@@ -88,7 +99,14 @@ class EarthSystem():
             self.add_snapshot( ri, vi, ai )
         return 0
     
-    def add_snapshot( self, pos_new, vel_new, accel_new ):
+    def _validate_init_snapshots(self):
+        expected = {'positions', 'velocities', 'accels', 'masses'}
+        missing = expected - set(self.__dict__.keys())
+        if missing:
+            raise AttributeError(f"Missing: {missing}. Initialize by running `.init_snapshots()`.")
+
+
+    def add_snapshot(self, pos_new: NDArray, vel_new: NDArray, accel_new: NDArray):
         """Append the given arrays as new elements in the lists.
 
         Parameters
@@ -111,7 +129,7 @@ class EarthSystem():
         self.velocities.append( vel_new )
         self.accels.append( accel_new )
 
-    def calc_gravity_accel(self, xyz ):
+    def calc_gravity_accel(self, xyz: NDArray):
         """With Earth as the center of the gravitational well, calculate the acceleration at the given points.
         
         No corrections due to oblateness of Earth.
@@ -145,7 +163,7 @@ class EarthSystem():
         else:
             return grav_accel_00
         
-    def _forward_euler( self, r0,v0,a0 ):
+    def _forward_euler(self, r0:float, v0:float, a0:float) -> tuple[float, float, float]:
         """Make a step in time using the forward Euler integrator. Should just be used to init snapshots.
         
         """
@@ -159,14 +177,25 @@ class EarthSystem():
     def propagate_step( self ):
         """Calculate the position, velocity, and acceleration of the objects for the next time-step, using the velocity Verlet integration.
         Append the arrays by calling `add_snapshot`
+
+        compute the new position from the previous state x = (r,v,a)
+        r_{k+1} = r_k + dt*v_k + 0.5*dt*a_k^2
+        compute the new acceleration based from the potential based on the new position
+        a_{k+1} = A(r_{k+1})
+        compute the new veloctiy from the mean of the new and old accelerations
+        v_{k+1} = v_k + 0.5*dt*(a_k + a_{k+1})
+        
         """
+        self._validate_init_snapshots() 
+
         # Velocity Verlet step
         r_new = self.positions[-1] + self.velocities[-1]*self.delta_time_s + 0.5*self.accels[-1]*self.delta_time_s**2
         a_new = self.calc_gravity_accel( r_new )
         v_new = self.velocities[-1] + 0.5*( self.accels[-1] + a_new )*self.delta_time_s
 
-        self.add_snapshot( r_new, a_new, v_new )
+        self.add_snapshot( r_new, v_new, a_new )
         
+    
 __namespace__ = 'satellites'
 __author__ = 'Ivan Gadjev'
 __year__ = '2026'
