@@ -29,24 +29,36 @@ The simulation of orbital trajectories is based on a step-by-step integration of
 
 The **velocity Verlet** recursion equations for Newton's equations are:
 
-1. Compute the new position, $r_{k+1}$ from the previous state $x_k = (r,v,a)_k$
-$$r_{k+1} = r_k + \Delta t v_k + \frac{a_k^2}{2}\Delta t$$
+1. Compute the new position, $r_{k+1}$ from the previous state $x_{k} = (r,v,a)_{k}$
+  $$r_{k+1} = r_k + \Delta t v_k + \frac{a_k^2}{2}\Delta t$$
 
-2. Compute the new acceleration based from the potential based on the new position
-$$a_{k+1} = A(r_{k+1})$$
+2. Compute the new acceleration from the potential based on the new position
+  $$a_{k+1} = A(r_{k+1})$$
 
 3. Compute the new veloctiy from the mean of the new and old accelerations
-$$v_{k+1} = v_k + \frac{(a_k + a_{k+1})}{2}\Delta t$$
+  $$v_{k+1} = v_k + \frac{(a_k + a_{k+1})}{2}\Delta t$$
 
 In general, the time-step, $\Delta t$ can also depend on the iteration number i.e. $\Delta t_k$. Also note that the acceleration update assumes that the acceleration at a time-step $k$ only depends on the position of the particle at that time-step. 
 
 
 Note that since the velocity Verlet requires knowledge of the kinematic state in the previous two steps, an initialization procedure is needed. Fortunately, it is sufficient to use a basic forward Euler integration scheme to generate the first two states. 
 
+Each orbit is given an initial position and veloctiy, with the initial acceleration being computed from the initial position i.e.:
+
+**Initial conditions**
+$$r_{0}$$
+$$v_{0}$$
+$$a_{0} = A(r_{0})$$
+
+The next step is computed as:
+
 **Forward Euler**:
-$$a_{k+1} = a_{k} = a_{0}$$
-$$v_{k+1} = v_{k} + a_{0}\Delta t$$
-$$r_{k+1} = r_{l} + v_{k}\Delta t + \frac{a_{0}}{2}\Delta t^{2} $$
+$$r_{1} = r_{0} + v_{0}\Delta t + \frac{a_{0}}{2}\Delta t^{2} $$
+$$v_{1} = v_{0} + a_{0}\Delta t$$
+$$a_{1} = A(r_{1})$$
+
+As mentioned above, it is possible to carry the Forwar Euler integration to simulate the orbit of the object, but this technique does not preserve the system's phase-space volume, is not time-reversible, and can be numerically unstable. Hence, after initialization, the simulation is carried through with the velocity Verlet scheme.
+
 
 ### J2 correction
 The J2 correction is a second order term in the spherical harmonics expansion of Earth's gravitational potential. It accounts for the slight, axially symmetric flattening at poles due to Earth's rotation. The estimated amplitude of the J2 term is $J_2 = 0.00162$, which is about a thousand times smaller than the perfect sphere potential term. 
@@ -59,6 +71,14 @@ The J2 correction is a second order term in the spherical harmonics expansion of
 
 
 ## Development to-do's:
+
+2026.05
+- `done` KF state estimation on simulated orbital data initial implementation 
+- `TODO` stress test KF on sim data with different scenarios
+- `look into` When using the J2 correction and populating orbits with different radial initial distances, there appear discrete jumps in the orbital paths. Smells like a floating point round off, but I am using float64 in the integration scheme.
+  - not a big concern for showing how KF works on this data, but something to look into
+- `TODO` write up KF equations on README
+
 2026.04
 - Continue Kalman filter updates and refinement
   - Constant velocity example is showing strange behavior
