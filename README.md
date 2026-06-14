@@ -78,9 +78,6 @@ The J2 correction is a second order term in the spherical harmonics expansion of
 - `look into` When using the J2 correction and populating orbits with different radial initial distances, there appear discrete jumps in the orbital paths. Smells like a floating point round off, but I am using float64 in the integration scheme.
   - not a big concern for showing how KF works on this data, but something to look into
 - `TODO` write up KF equations on README
-
-
-2026.05
 - `fixed` bug in orbit propagation step, where the new position, velocity, and accel get added to the snapshots. I had switched the order of arguments.
 - `todo` When J2 correction is ON and the starting position is on the equator with varying radius there appear "bands" of orbits. It smells like a floating point issue to me. Should make sure all arrays are float64. 
 
