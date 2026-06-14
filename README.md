@@ -59,6 +59,11 @@ The J2 correction is a second order term in the spherical harmonics expansion of
 
 
 ## Development to-do's:
+
+2026.05
+- `fixed` bug in orbit propagation step, where the new position, velocity, and accel get added to the snapshots. I had switched the order of arguments.
+- `todo` When J2 correction is ON and the starting position is on the equator with varying radius there appear "bands" of orbits. It smells like a floating point issue to me. Should make sure all arrays are float64. 
+
 2026.04
 - Continue Kalman filter updates and refinement
   - Constant velocity example is showing strange behavior
