@@ -149,7 +149,7 @@ def transform_polar_Gaussian_to_Cartesian(r_phi_mean:NDArray, r_phi_covariances:
     return xy_mean, xy_covariances
 
 
-def finite_difference(data:NDArray, dt:float, method='backward'):
+def finite_difference(data:NDArray, dt:float, method="central"):
     """Calculates a finite difference derivative of the given data on axis=0.
 
     The output will not have the same number of time steps as the input,
@@ -173,12 +173,31 @@ def finite_difference(data:NDArray, dt:float, method='backward'):
     """
     data = np.atleast_2d(data)
     if method == "backward":
-        data_deriv = (data[:,1:] - data[:,:-1]) / dt
+        d1_data = (data[:,1:] - data[:,:-1]) / dt
     elif method == "central":
-        data_deriv = ( data[:,2:] - data[:,:-2] ) / (2*dt)
+        d1_data = ( data[:,2:] - data[:,:-2] ) / (2*dt)
 
-    return data_deriv
+    return d1_data
 
+def finite_difference_ord2(data:NDArray, dt:float):
+    """Finite difference estimate for the second order derivative of data.
+
+    f'' = (f(t+dt) - 2*f(t) + f(t-dt)) / dt^2 + O(dt^2)
+
+    Parameters
+    ----------
+    data : NDArray
+        shape (n_functions, n_timesteps)
+    dt : float
+        time step for differentiation
+
+    Returns
+    -------
+    NDArray
+    """
+    data = np.atleast_2d(data)
+    d2_data = (data[:,2:] - 2*data[:,1:-1] + data[:,:-2]) / dt**2
+    return d2_data
 
 __namespace__ = 'utils'
 __author__ = 'Ivan Gadjev'
